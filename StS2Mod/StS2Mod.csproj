@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- 模组 DLL 名（不含扩展名）—— 必须与 pck_name 和 .pck 文件名一致 -->
+    <AssemblyName>ChargeDrawMod</AssemblyName>
+    <RootNamespace>StS2Mod</RootNamespace>
+  </PropertyGroup>
+
+  <!-- ============================================================
+       游戏安装路径 —— 换机器时改这里即可。
+       支持两种方式：
+       1) 直接改下面的 GamePath
+       2) 创建 StS2Mod.csproj.user 覆盖（不提交到 Git）
+       ============================================================ -->
+  <PropertyGroup>
+    <GamePath>D:\Program Files (x86)\Steam\steamapps\common\Slay the Spire 2</GamePath>
+    <GameManagedPath>$(GamePath)\data_sts2_windows_x86_64</GameManagedPath>
+    <ModsDir>$(GamePath)\mods</ModsDir>
+  </PropertyGroup>
+
+  <!-- 引用游戏程序集（不复制到输出） -->
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>$(GameManagedPath)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="sts2">
+      <HintPath>$(GameManagedPath)\sts2.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- ============================================================
+       可选：生成调试符号
+       ============================================================ -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+</Project>

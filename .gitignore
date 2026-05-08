@@ -1,0 +1,17 @@
+# Build outputs
+StS2Mod/bin/
+StS2Mod/obj/
+StS2Mod/*.pck
+
+# Decompiled game code (do not commit)
+sts2_decompiled/
+sts2.dll
+sts2_types.txt
+
+# Test artifacts
+test.pck
+
+# IDE
+.vs/
+.idea/
+*.user
