@@ -31,8 +31,6 @@ for sub in ["bin", "obj"]:
 # 2. Build
 step("Building C# project (net9.0)...")
 csproj = os.path.join(PROJ_DIR, f"{MOD_NAME}.csproj")
-if not os.path.exists(csproj):
-    fail(f"Project file not found: {csproj}")
 result = subprocess.run(
     ["dotnet", "build", csproj, "-c", "Debug", "--nologo", "-v", "q"],
     capture_output=True, text=True
