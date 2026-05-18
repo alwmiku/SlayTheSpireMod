@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
@@ -9,12 +9,10 @@ using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Models.Cards;
 using MegaCrit.Sts2.Core.Modding;
 
-namespace StS2Mod;
+namespace ChargeDrawMod;
 
 /// <summary>
-/// 给「仆从俯冲」(MinionDiveBomb) 添加抽 1 张牌效果。
-/// MinionDiveBomb 是储君「冲锋！！」生成的 Token 随从牌。
-/// </summary>
+/// 缁欍€屼粏浠庝刊鍐层€?MinionDiveBomb) 娣诲姞鎶?1 寮犵墝鏁堟灉銆?/// MinionDiveBomb 鏄偍鍚涖€屽啿閿嬶紒锛併€嶇敓鎴愮殑 Token 闅忎粠鐗屻€?/// </summary>
 [ModInitializer("Initialize")]
 public static class ModEntry
 {
@@ -25,7 +23,7 @@ public static class ModEntry
     }
 }
 
-// ── 补丁 1：MinionDiveBomb.OnPlay 后抽 1 张牌 ───────────────
+// 鈹€鈹€ 琛ヤ竵 1锛歁inionDiveBomb.OnPlay 鍚庢娊 1 寮犵墝 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 [HarmonyPatch(typeof(MinionDiveBomb), "OnPlay")]
 internal static class MinionDiveBombOnPlayPatch
 {
@@ -36,14 +34,22 @@ internal static class MinionDiveBombOnPlayPatch
         PlayerChoiceContext choiceContext,
         CardPlay cardPlay)
     {
-        await __result;
-        if (choiceContext == null || __instance?.Owner == null) return;
-        if (MegaCrit.Sts2.Core.Combat.CombatManager.Instance?.IsOverOrEnding != false) return;
-        await CardPileCmd.Draw(choiceContext, 1m, __instance.Owner);
+        try
+        {
+            if (__result != null)
+                await __result;
+            if (choiceContext == null || __instance?.Owner == null) return;
+            if (MegaCrit.Sts2.Core.Combat.CombatManager.Instance?.IsOverOrEnding != false) return;
+            await CardPileCmd.Draw(choiceContext, 1m, __instance.Owner);
+        }
+        catch
+        {
+            // Swallow exceptions to avoid breaking game flow from async void patch callbacks.
+        }
     }
 }
 
-// ── 补丁 2：MinionDiveBomb 描述追加本地化"抽 1 张牌" ───────────
+// 鈹€鈹€ 琛ヤ竵 2锛歁inionDiveBomb 鎻忚堪杩藉姞鏈湴鍖?鎶?1 寮犵墝" 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 [HarmonyPatch(typeof(CardModel),
     nameof(CardModel.GetDescriptionForPile),
     typeof(PileType), typeof(Creature))]
@@ -52,15 +58,15 @@ internal static class MinionDiveBombDescriptionPatch
     private static readonly Dictionary<string, string> DrawText = new()
     {
         ["eng"] = "Draw 1 card.",
-        ["zhs"] = "抽 1 张牌。",
-        ["zht"] = "抽 1 張牌。",
-        ["jpn"] = "カードを1枚引く。",
-        ["kor"] = "카드를 1장 뽑습니다.",
+        ["zhs"] = "鎶?1 寮犵墝銆?,
+        ["zht"] = "鎶?1 寮电墝銆?,
+        ["jpn"] = "銈兗銉夈倰1鏋氬紩銇忋€?,
+        ["kor"] = "旃措摐毳?1鞛?虢戩姷雼堧嫟.",
         ["fre"] = "Piochez 1 carte.",
         ["deu"] = "Ziehe 1 Karte.",
         ["spa"] = "Roba 1 carta.",
         ["ptb"] = "Compre 1 carta.",
-        ["rus"] = "Возьмите 1 карту.",
+        ["rus"] = "袙芯蟹褜屑懈褌械 1 泻邪褉褌褍.",
     };
 
     [HarmonyPostfix]
@@ -75,3 +81,4 @@ internal static class MinionDiveBombDescriptionPatch
         return __result + "\n" + text;
     }
 }
+

@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- 妯＄粍 DLL 鍚嶏紙涓嶅惈鎵╁睍鍚嶏級鈥斺€?蹇呴』涓?pck_name 鍜?.pck 鏂囦欢鍚嶄竴鑷?-->
+    <AssemblyName>ChargeDrawMod</AssemblyName>
+    <RootNamespace>ChargeDrawMod</RootNamespace>
+  </PropertyGroup>
+
+  <!-- ============================================================
+       娓告垙瀹夎璺緞 鈥斺€?鎹㈡満鍣ㄦ椂鏀硅繖閲屽嵆鍙€?       鏀寔涓ょ鏂瑰紡锛?       1) 鐩存帴鏀逛笅闈㈢殑 GamePath
+       2) 鍒涘缓 ChargeDrawMod.csproj.user 瑕嗙洊锛堜笉鎻愪氦鍒?Git锛?       ============================================================ -->
+  <PropertyGroup>
+    <GamePath>D:\Program Files (x86)\Steam\steamapps\common\Slay the Spire 2</GamePath>
+    <GameManagedPath>$(GamePath)\data_sts2_windows_x86_64</GameManagedPath>
+    <ModsDir>$(GamePath)\mods</ModsDir>
+  </PropertyGroup>
+
+  <!-- 寮曠敤娓告垙绋嬪簭闆嗭紙涓嶅鍒跺埌杈撳嚭锛?-->
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>$(GameManagedPath)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="sts2">
+      <HintPath>$(GameManagedPath)\sts2.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- ============================================================
+       鍙€夛細鐢熸垚璋冭瘯绗﹀彿
+       ============================================================ -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+</Project>
+
