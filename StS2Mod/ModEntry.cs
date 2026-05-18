@@ -36,10 +36,18 @@ internal static class MinionDiveBombOnPlayPatch
         PlayerChoiceContext choiceContext,
         CardPlay cardPlay)
     {
-        await __result;
-        if (choiceContext == null || __instance?.Owner == null) return;
-        if (MegaCrit.Sts2.Core.Combat.CombatManager.Instance?.IsOverOrEnding != false) return;
-        await CardPileCmd.Draw(choiceContext, 1m, __instance.Owner);
+        try
+        {
+            if (__result != null)
+                await __result;
+            if (choiceContext == null || __instance?.Owner == null) return;
+            if (MegaCrit.Sts2.Core.Combat.CombatManager.Instance?.IsOverOrEnding != false) return;
+            await CardPileCmd.Draw(choiceContext, 1m, __instance.Owner);
+        }
+        catch
+        {
+            // Avoid surfacing exceptions from async void patch callbacks.
+        }
     }
 }
 
