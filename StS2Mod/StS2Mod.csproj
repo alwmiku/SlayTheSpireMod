@@ -32,6 +32,10 @@
       <HintPath>$(GameManagedPath)\sts2.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="GodotSharp">
+      <HintPath>$(GameManagedPath)\GodotSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
   <!-- ============================================================

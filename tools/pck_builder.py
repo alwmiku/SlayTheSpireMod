@@ -1,7 +1,7 @@
 """
 STS2 PCK 打包工具
 --------------
-从文件夹或文件列表生成 Godot 4 .pck（pack version 2），
+从文件夹或文件列表生成 Godot 4.5 .pck（pack version 3），
 用于杀戮尖塔 2 模组部署。不依赖 Godot 编辑器。
 
 用法:
@@ -17,10 +17,20 @@ import hashlib
 import os
 import sys
 
+PACK_FORMAT_VERSION = 3
+PACK_REL_FILEBASE = 1 << 1
+DEFAULT_ALIGNMENT = 32
+
+
+def _padding(alignment, position):
+    """返回把 position 补齐到 alignment 所需的 0 字节数量。"""
+    rest = position % alignment
+    return 0 if rest == 0 else alignment - rest
+
 
 def create_pck(output_path, files_dict, godot_version=(4, 5, 1)):
     """
-    创建 Godot 4 .pck 文件。
+    创建 Godot 4.5 .pck 文件。
 
     Args:
         output_path:  输出 .pck 路径
@@ -28,65 +38,75 @@ def create_pck(output_path, files_dict, godot_version=(4, 5, 1)):
         godot_version: (major, minor, patch) 版本三元组
     """
     file_entries = []
-    data_blocks = []
 
     for vpath in sorted(files_dict.keys()):
         content = files_dict[vpath]
         if not isinstance(content, bytes):
             content = str(content).encode("utf-8")
 
-        entry_path = vpath.encode("utf-8")
-        file_size = len(content)
-        file_md5 = hashlib.md5(content).digest()
+        # Godot 的 PCK 目录里不带 res:// 前缀，反斜杠也必须统一成斜杠。
+        clean_path = vpath.replace("\\", "/")
+        if clean_path.startswith("res://"):
+            clean_path = clean_path[len("res://"):]
 
-        file_entries.append((entry_path, file_size, file_md5))
-        data_blocks.append(content)
-
-    # 计算偏移量
-    index_bytes = bytearray()
-    entry_hashes = bytearray()
-    header_size = 40  # GDPC(4) + version(4) + godot_ver(16) + reserved(16)
-    index_size = (
-        sum(4 + len(ep) + 8 + 8 + 16 for ep, _, _ in file_entries) + 16
-    )
-    data_start = header_size + index_size
-    current_offset = 0
-
-    for i, ((entry_path, file_size, file_md5), _) in enumerate(
-        zip(file_entries, data_blocks)
-    ):
-        file_offset = data_start + current_offset
-        current_offset += file_size
-
-        index_bytes += struct.pack("<I", len(entry_path))
-        index_bytes += entry_path
-        index_bytes += struct.pack("<Q", file_offset)
-        index_bytes += struct.pack("<Q", file_size)
-        index_bytes += file_md5
-
-        entry_hashes += struct.pack("<I", len(entry_path))
-        entry_hashes += entry_path
-        entry_hashes += struct.pack("<Q", file_offset)
-        entry_hashes += struct.pack("<Q", file_size)
-        entry_hashes += file_md5
-
-    index_md5 = (
-        hashlib.md5(bytes(entry_hashes)).digest()
-        if file_entries
-        else b"\x00" * 16
-    )
+        file_entries.append({
+            "path": clean_path,
+            "content": content,
+            "size": len(content),
+            "md5": hashlib.md5(content).digest(),
+            "offset": 0,
+        })
 
     with open(output_path, "wb") as f:
+        # Godot 4.5 当前使用 PCK V3。V3 头部和旧 V2 最大的区别是：
+        # 1. 头部中有 pack_flags、file_base、dir_offset。
+        # 2. 目录放在文件数据之后，不再紧跟在头部后面。
+        # 3. 每个目录项末尾多一个 flags 字段。
+        # 少写这些字段时，Godot 会把二进制 MD5/内容错当成 UTF-8 路径解析，
+        # 启动日志里就会出现 Unicode parsing error，严重时直接卡在加载 PCK。
         f.write(b"GDPC")
-        f.write(struct.pack("<I", 2))
+        f.write(struct.pack("<I", PACK_FORMAT_VERSION))
         f.write(struct.pack("<I", godot_version[0]))
         f.write(struct.pack("<I", godot_version[1]))
         f.write(struct.pack("<I", godot_version[2]))
-        f.write(b"\x00" * 16)
-        f.write(bytes(index_bytes))
-        f.write(index_md5)
-        for db in data_blocks:
-            f.write(db)
+        f.write(struct.pack("<I", PACK_REL_FILEBASE))
+
+        file_base_offset = f.tell()
+        f.write(struct.pack("<Q", 0))
+        dir_offset_offset = f.tell()
+        f.write(struct.pack("<Q", 0))
+        f.write(b"\x00" * 64)
+
+        f.write(b"\x00" * _padding(DEFAULT_ALIGNMENT, f.tell()))
+        file_base = f.tell()
+
+        f.seek(file_base_offset)
+        f.write(struct.pack("<Q", file_base))
+        f.seek(file_base)
+
+        for entry in file_entries:
+            entry["offset"] = f.tell()
+            f.write(entry["content"])
+            f.write(b"\x00" * _padding(DEFAULT_ALIGNMENT, f.tell()))
+
+        f.write(b"\x00" * _padding(DEFAULT_ALIGNMENT, f.tell()))
+        dir_offset = f.tell()
+
+        f.seek(dir_offset_offset)
+        f.write(struct.pack("<Q", dir_offset))
+        f.seek(dir_offset)
+
+        f.write(struct.pack("<I", len(file_entries)))
+        for entry in file_entries:
+            path_bytes = entry["path"].encode("utf-8")
+            path_pad = _padding(4, len(path_bytes))
+            f.write(struct.pack("<I", len(path_bytes) + path_pad))
+            f.write(path_bytes)
+            f.write(b"\x00" * path_pad)
+            f.write(struct.pack("<Q", entry["offset"] - file_base))
+            f.write(struct.pack("<Q", entry["size"]))
+            f.write(entry["md5"])
+            f.write(struct.pack("<I", 0))
 
 
 def _collect_files(root):

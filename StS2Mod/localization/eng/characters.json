@@ -1,0 +1,14 @@
+{
+  "QIQUN.title": "Qiqun",
+  "QIQUN.titleObject": "Qiqun",
+  "QIQUN.pronounObject": "them",
+  "QIQUN.possessiveAdjective": "their",
+  "QIQUN.pronounPossessive": "theirs",
+  "QIQUN.pronounSubject": "they",
+  "QIQUN.cardsModifierTitle": "Qiqun Cards",
+  "QIQUN.cardsModifierDescription": "Cards from Qiqun's card pool can appear.",
+  "QIQUN.eventDeathPrevention": "The thread holds.",
+  "QIQUN.unlockText": "Unlocked.",
+  "QIQUN.title.title": "Qiqun",
+  "QIQUN.description": "A prototype character focused on drawing, returning, and reshuffling cards."
+}
